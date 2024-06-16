@@ -25,21 +25,34 @@ app.get("/api/hello", function (req, res) {
 });
 
 
-app.get('/api/:date?', (req, res) => {
-  //extract the date
+app.get('/api/:date', (req, res) => {
   let { date } = req.params;
 
-  //handle empty date
+  //if the date is undefined return the current date
   if (date === undefined) {
-    date = new Date();
-    res.json({ unix: new Date(date).getDate(), utc: new Date(date).toUTCString() });
-  } else if (new Date(date).toString() === 'Invalid Date') {
-    res.json({ error: 'Invalid Date' });
-  } else {
-    res.json({ unix: new Date(parseInt(date, 10)).getTime(), utc: new Date(date).toUTCString() });
+    const now = new Date();
+    return res.json({ unix: now.getTime(), utc: now.toUTCString() });
   }
-})
 
+  //lets check if the date is a valid ISO date or unix timestamp
+  let parseDate = isNaN(date) ? new Date(date) : new Date(parseInt(date));
+
+  //if the date is invalid
+  if (parseDate.toString() === 'Invalid Date') {
+    return res.json({ error: 'Invalid Date' });
+  }
+
+  //Return the unix timestamp and UTC string
+  return res.json({
+    unix: parseDate.getTime(),
+    utc: parseDate.toUTCString()
+  });
+});
+
+app.get('/api', (req, res) => {
+  const now = new Date();
+  return res.json({ unix: now.getTime(), utc: now.toUTCString() });
+})
 
 // Listen on port set in environment variable or default to 3000
 var listener = app.listen(process.env.PORT || 3000, function () {
